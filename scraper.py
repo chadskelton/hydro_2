@@ -92,18 +92,6 @@ def scrape_hydro(url): # in case page changes
         print "Couldn't check for White Rock (possibly blank page)"
 '''
 
-    '''
-    decisions = table.findAll ("a")
-    
-    for decision in decisions:
-        record = {}
-        record["type"] = "B.C. Supreme Court"
-        record["citation"] = decision.text
-        record["url"] = 'http://www.courts.gov.bc.ca' + decision.get('href')
-        tweetit(record)
-        
-    '''
-
 for x in range (0, 1): # trying 15 instead of 22
     print "Cycle:" + str(x)
  
