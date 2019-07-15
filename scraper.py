@@ -19,7 +19,8 @@ def emailit(msg): # can use this function if want to email update instead of twe
 
 # !!! Important, way this is setup it will only email if it hasn't been tweeted; if want to do both; should add the
 # email stuff to the tweet one !!!
-
+	time.sleep(60)
+	
         try:
             
             fromaddr = 'bchydrobot@gmail.com'
