@@ -1,24 +1,109 @@
-# This is a template for a Python scraper on morph.io (https://morph.io)
-# including some code snippets below that you should find helpful
+# Load in modules
+# !!! NOTE - When doing a more general News Bot, should probably create another field that describes the data
+# (i.e. "New Court Decision") and one that has the email of the person to notify (as this may vary depending
+# on the site scraped. Could then have one script grabbing dozens of different sites and notifying
+# dozens of different reporters/editors !!!
 
-# import scraperwiki
-# import lxml.html
-#
-# # Read in a page
-# html = scraperwiki.scrape("http://foo.com")
-#
-# # Find something on the page using css selectors
-# root = lxml.html.fromstring(html)
-# root.cssselect("div[align='left']")
-#
-# # Write out to the sqlite database using scraperwiki library
-# scraperwiki.sqlite.save(unique_keys=['name'], data={"name": "susan", "occupation": "software developer"})
-#
-# # An arbitrary query against the database
-# scraperwiki.sql.select("* from data where 'name'='peter'")
+import scraperwiki
+import tweepy
+import time
+from datetime import datetime
+import smtplib
+import requests
+from BeautifulSoup import BeautifulSoup
+# new for secret variables
+import os
+import mechanize
 
-# You don't have to do things with the ScraperWiki and lxml libraries.
-# You can use whatever libraries you want: https://morph.io/documentation/python
-# All that matters is that your final data is written to an SQLite database
-# called "data.sqlite" in the current working directory which has at least a table
-# called "data".
+def emailit(msg): # can use this function if want to email update instead of tweet it
+
+# !!! Important, way this is setup it will only email if it hasn't been tweeted; if want to do both; should add the
+# email stuff to the tweet one !!!
+
+        try:
+            
+            fromaddr = 'bchydrobot@gmail.com'
+            toaddrs  = ['cskeltondata@gmail.com']
+
+            # Gmail login
+            
+            username = 'bchydrobot'
+            password = os.environ['MORPH_PASSWORD']
+            
+            # Sending the mail 
+            
+            server = smtplib.SMTP("smtp.gmail.com:587")
+            server.starttls()
+            server.login(username,password)
+            server.sendmail(fromaddr, toaddrs, msg)
+            server.quit()
+            
+        except:
+            print "Unable to add to table or email"
+    
+def scrape_hydro(url): # in case page changes
+
+    html = requests.get(url)
+    htmlpage = html.content
+    
+    soup = BeautifulSoup(htmlpage)
+    
+    section = soup.find ("div", {"id" : "current-521980323"})
+    
+    # print section
+        
+    table = section.find ("table", {"class": "municipality-list table-striped scroll-body sortable-table"})
+
+    rows = table.findAll("tr")
+        
+    for row in rows:
+        print row
+
+        cells = row.findAll("td")
+            
+        try:
+		record = {}
+                record["municipality"] = cells[0].text
+                record["offsince"] = cells[1].text
+                record["status"] = cells[2].text
+                record["area"] = cells[3].text
+                record["out"] = cells[4].text
+                record["cause"] = cells[5].text
+                record["updated"] = cells[6].text
+                
+                if record["municipality" = "White Rock" then:
+                          print "Outages in White Rock"
+                          emailit("Subject: Power outage in White Rock" + "\nTo: cskeltondata@gmail.com\n\nPower outage in White Rock at" + record["area"] + "affecting " + record["out"])
+                else:
+                          print "No outages in White Rock"
+        except:  
+                          
+              print 'Problem scraping row'            
+'''
+    try:    
+        if 'White Rock' in section.text:
+            print "Outages in White Rock"
+            emailit("Subject: Power outage in White Rock" + "\nTo: cskeltondata@gmail.com\n\nPower outage in White Rock")   
+        else:
+            print "No outages in White Rock"
+    except:    
+        print "Couldn't check for White Rock (possibly blank page)"
+'''
+
+    '''
+    decisions = table.findAll ("a")
+    
+    for decision in decisions:
+        record = {}
+        record["type"] = "B.C. Supreme Court"
+        record["citation"] = decision.text
+        record["url"] = 'http://www.courts.gov.bc.ca' + decision.get('href')
+        tweetit(record)
+        
+    '''
+
+for x in range (0, 1): # trying 15 instead of 22
+    print "Cycle:" + str(x)
+ 
+    scrape_hydro("https://www.bchydro.com/power-outages/app/outage-list.html#current-521980323")
+    time.sleep(3600) # wait one hour, change this to 3600 seconds
